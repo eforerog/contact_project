@@ -11,6 +11,11 @@
 |
 */
 
+Route::model('contacts', 'Contact');
+Route::model('emails', 'Email');
+Route::model('phones', 'Phone');
+
+
 Route::get('/', 'WelcomeController@index');
 
 Route::get('home', 'HomeController@index');
@@ -19,3 +24,20 @@ Route::controllers([
 	'auth' => 'Auth\AuthController',
 	'password' => 'Auth\PasswordController',
 ]);
+
+Route::bind('emails', function($value, $route) {
+	return App\Email::whereEmail($value)->first();
+});
+
+Route::bind('phones', function($value, $route) {
+	return App\Phone::wherePhone($value)->first();
+});
+
+Route::bind('contacts', function($value, $route) {
+	return App\Contact::whereId($value)->first();
+});
+
+
+Route::resource('contacts', 'ContactsController');
+Route::resource('contacts.emails', 'EmailsController');
+Route::resource('contacts.phones', 'PhonesController');

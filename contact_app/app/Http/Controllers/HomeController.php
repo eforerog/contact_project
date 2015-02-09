@@ -1,5 +1,7 @@
 <?php namespace App\Http\Controllers;
 
+use Redirect;
+
 class HomeController extends Controller {
 
 	/*
@@ -30,7 +32,8 @@ class HomeController extends Controller {
 	 */
 	public function index()
 	{
-		return view('home');
+		//return view('home');
+		return Redirect::route('contacts.index');
 	}
 
 }
