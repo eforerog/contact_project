@@ -147,6 +147,8 @@ return [
 		'App\Providers\RouteServiceProvider',
 		
 		'Illuminate\Html\HtmlServiceProvider',
+		
+		'Maatwebsite\Excel\ExcelServiceProvider',
 
 	],
 
@@ -198,6 +200,8 @@ return [
 		
 		'Form'      => 'Illuminate\Html\FormFacade',
 		'HTML'      => 'Illuminate\Html\HtmlFacade',
+		
+		'Excel'		=> 'Maatwebsite\Excel\Facades\Excel',
 
 	],
 

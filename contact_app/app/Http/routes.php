@@ -41,3 +41,6 @@ Route::bind('contacts', function($value, $route) {
 Route::resource('contacts', 'ContactsController');
 Route::resource('contacts.emails', 'EmailsController');
 Route::resource('contacts.phones', 'PhonesController');
+
+Route::resource('loadSpreadsheet', 'ContactsController@loadSpreadsheet');
+Route::post('importSpreadsheet', array('as' => 'importSpreadsheet', 'uses' => 'ContactsController@importSpreadsheet'));

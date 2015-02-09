@@ -1,11 +1,14 @@
 <?php namespace App\Http\Controllers;
 
+use File;
 use Input;
 use Redirect;
 use Validator;
 use App\Contact;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+
+use Excel;
 
 use Illuminate\Http\Request;
 
@@ -122,5 +125,56 @@ class ContactsController extends Controller {
 		$contact->delete();
 		return Redirect::route('contacts.index')->with('message', 'Contact deleted.');
 	}
+	
+	/**
+	 * Process data.
+	 *
+	 * 
+	 * @return Response
+	 */
+	 
+	public function loadSpreadsheet()
+	{
+		return view('contacts.loadsheet');
+	}
+	 
+	 
+	public function importSpreadsheet()
+	{
+		if (Input::hasFile('file_data')) {
+			
+			Input::file('file_data')->move('public/uploads', Input::file('file_data')->getClientOriginalName());
+			
+			switch(Input::file('file_data')->guessClientExtension())
+			{
+				case "xls":	break;
+				case "xlsx":	break;
+				case "csv":	$xx = Excel::setDelimiter(";");
+							break;
+				case "tsv": 	$xx = Excel::setDelimiter("\t");
+							break;
+				default:
+							break;
+			}
+			
+			$url = 'public/uploads/' . Input::file('file_data')->getClientOriginalName();
+			
+			$xx = Excel::load($url, function($reader) {
+				
+				echo $reader->first();
+			})->get();
+			
+			
+			File::delete($url);
+			
+			//return $xx->all();
+		}
+		else
+		{
+			echo "no hay";
+		}
+		
+	}
+	
 
 }
