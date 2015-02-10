@@ -9,6 +9,8 @@ use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use DateTime;
 use Excel;
+use DB;
+use Auth;
 
 use Illuminate\Http\Request;
 
@@ -21,8 +23,16 @@ class ContactsController extends Controller {
 	 */
 	public function index()
 	{
-		$contacts = Contact::all();
-		return view('contacts.index', compact('contacts'));
+		if(Auth::check()){
+			$contacts = Contact::all();
+			return view('contacts.index', compact('contacts'));
+		}
+		else {
+			return view('Auth/login');
+			//return Redirect::route('index')->with('message', 'Please login.');
+		}
+		
+		
 	}
 
 	/**
@@ -32,7 +42,14 @@ class ContactsController extends Controller {
 	 */
 	public function create()
 	{
-		return view('contacts.create');
+		if(Auth::check()){
+			return view('contacts.create');
+		}
+		else
+		{
+			return view('Auth/login');
+		}
+		
 	}
 
 	/**
@@ -71,7 +88,14 @@ class ContactsController extends Controller {
 	 */
 	public function show(Contact $contact)
 	{
-		return view('contacts.show', compact('contact'));
+		if(Auth::check()){
+			return view('contacts.show', compact('contact'));
+		}
+		else
+		{
+			return view('Auth/login');
+		}
+		
 	}
 
 	/**
@@ -82,7 +106,14 @@ class ContactsController extends Controller {
 	 */
 	public function edit(Contact $contact)
 	{
-		return view('contacts.edit', compact('contact'));
+		if(Auth::check()){
+			return view('contacts.edit', compact('contact'));
+		}
+		else
+		{
+			return view('Auth/login');
+		}
+		
 	}
 
 	/**
@@ -135,7 +166,15 @@ class ContactsController extends Controller {
 	 
 	public function loadSpreadsheet()
 	{
-		return view('contacts.loadsheet');
+		if(Auth::check()){
+			
+			return view('contacts.loadsheet');
+		}
+		else
+		{
+			return view('Auth/login');
+		}
+		
 	}
 	 
 	 /**
@@ -147,6 +186,7 @@ class ContactsController extends Controller {
 	 
 	public function importSpreadsheet()
 	{
+		$error_message = "";
 		$dateformat = "";
 		if (Input::hasFile('file_data')) {
 			
@@ -167,91 +207,107 @@ class ContactsController extends Controller {
 			
 			$xx = Excel::load($url, function($reader) {
 				
-				$rows = $reader->all();
-				$first_row = $reader->first();
+				/*
 				
-				//headers check
-				$test_header =  json_encode($first_row);
 				
-				if ((strpos($test_header,'"first_name"') !== false) 
-					&& (strpos($test_header,'"last_name"') !== false)
-					&& (strpos($test_header,'"gender"') !== false)
-					&& (strpos($test_header,'"birthday"') !== false)
-					&& (strpos($test_header,'"emails"') !== false)
-					&& (strpos($test_header,'"phones"') !== false)){
-						
-						$count_error = 0;
-						$error_message = "";
-						foreach ($rows as $key=>$row ) {
-							//verifiy required data
-							if(!($row->first_name != "" && $row->last_name !="" && $row->phones != "")) {
-								$error_message = $error_message . "required info missing at row " . ($key + 1) . "<br />";
-								$count_error+=1;
-							}
-							//verify gender format
-							if(!($row->gender == "M" || $row->gender == "F" || $row->gender == "") ){
-								$error_message = $error_message . "gender format error at row " . ($key + 1) . "<br />";	
-								$count_error+=1;
-							}
-							
-							//verify birthday format
-							switch(Input::file('file_data')->guessClientExtension())
-							{
-								case "xls":	$dateformat = 'Y-m-d H:i:s';
-											break;
-								case "xlsx":$dateformat = 'Y-m-d H:i:s';
-											break;
-								case "csv":	$dateformat = 'd/m/Y';
-											break;
-								case "tsv": 	$dateformat = 'd/m/Y';
-											break;
-								default:
-											break;
-							}
-							
-							$ymd = DateTime::createFromFormat($dateformat, $row->birthday);
-							if(!$ymd){
-								$error_message = $error_message . "invalid date format at row : " . ($key + 1) . "<br />";
-								$count_error+=1;
-							}
-							
-						}
-						
-						if ($count_error > 0){
-							echo "hay errores en el archivo: " . $error_message;
-						}
-						else{
-								
-						}
-						
-				}
-				else
-				{
-					echo "bad headers";
-				}
-				
-				/*if (isset($firstrow['first_name']) && isset($firstrow['last_name']) && isset($firstrow['gender']) && isset($firstrow['birthday']) && isset($firstrow['phones']) && isset($firstrow['emails'])) {
-					echo "completo";
-				}
-				
-				echo $reader->first()->first_name;
-				echo $reader->first()->last_name;
-				echo $reader->first()->gender;
-				echo $reader->first()->birthday;
-				echo $reader->first()->emails;
-				echo $reader->first()->phones;
 				*/
+				
 			})->get();
+			
+			
+			$rows = $xx;
+			$first_row = $xx->first();
+			
+			//headers check
+			$test_header =  json_encode($first_row);
+			
+			if ((strpos($test_header,'"first_name"') !== false) 
+				&& (strpos($test_header,'"last_name"') !== false)
+				&& (strpos($test_header,'"gender"') !== false)
+				&& (strpos($test_header,'"birthday"') !== false)
+				&& (strpos($test_header,'"emails"') !== false)
+				&& (strpos($test_header,'"phones"') !== false)){
+					
+					$count_error = 0;
+					$error_message = "";
+					foreach ($rows as $key=>$row ) {
+						//verifiy required data
+						if(!($row->first_name != "" && $row->last_name !="" && $row->phones != "")) {
+							$error_message = $error_message . "required info missing at row " . ($key + 1) . ", ";
+							$count_error+=1;
+						}
+						//verify gender format
+						if(!($row->gender == "M" || $row->gender == "F" || $row->gender == "") ){
+							$error_message = $error_message . "gender format error at row " . ($key + 1) . ", ";	
+							$count_error+=1;
+						}
+						
+						//verify birthday format
+						switch(Input::file('file_data')->guessClientExtension())
+						{
+							case "xls":	$dateformat = 'Y-m-d H:i:s';
+										break;
+							case "xlsx":$dateformat = 'Y-m-d H:i:s';
+										break;
+							case "csv":	$dateformat = 'd/m/Y';
+										break;
+							case "tsv": 	$dateformat = 'd/m/Y';
+										break;
+							default:
+										break;
+						}
+						
+						$ymd = DateTime::createFromFormat($dateformat, $row->birthday);
+						if(!$ymd){
+							$error_message = $error_message . "invalid date format at row : " . ($key + 1) . ", ";
+							$count_error+=1;
+						}
+						
+					}
+					
+					if ($count_error > 0){
+						$error_message = "Errors in upload process: " . $count_error . " - Description: " .  $error_message . ". Please check and try again.";
+						return view('contacts.loadsheetresult', compact('error_message'));
+					}
+					else{
+						
+						
+						
+							foreach ($rows as $key=>$row ) {
+								$newContact = Contact::create([
+									'first_name'=> $row->first_name,
+									'last_name'=> $row->last_name,
+									'gender'=> $row->gender,
+									'birthday'=> $row->birthday,
+									'user_id'=>Auth::id()
+								]);
+								
+								
+							}
+								
+							return Redirect::route('contacts.index')->with('message', 'Contacts uploaded succesfully.');
+						
+					}
+					
+			}
+			else
+			{
+				$error_message = "The file have some headers errors. Remember that the headers must be: first_name, last_name, gender, birthday, phones and emails";
+				return view('contacts.loadsheetresult', compact('error_message'));
+			}
 			
 			
 			File::delete($url);
 			
-			//return $xx->all();
 		}
 		else
 		{
-			echo "no hay";
+			$error_message = "No file selected to upload";
+			return view('contacts.loadsheetresult', compact('error_message'));
+			
 		}
+		
+		
 		
 	}
 	

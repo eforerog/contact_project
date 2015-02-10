@@ -12,8 +12,7 @@
                     	{!! Form::model(new App\Contact, ['route' => ['contacts.store']]) !!}
                             @include('contacts/partials/_form', ['submit_text' => 'Create Contact'])
                         {!! Form::close() !!}
-                
-                
+
 				</div>
 			</div>
 		</div>
