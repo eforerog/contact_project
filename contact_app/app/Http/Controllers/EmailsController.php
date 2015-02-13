@@ -1,9 +1,13 @@
 <?php namespace App\Http\Controllers;
 
+use Input;
+use Redirect;
+use Validator;
 use App\Contact;
 use App\Email;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
+use Auth;
 
 use Illuminate\Http\Request;
 
@@ -24,9 +28,15 @@ class EmailsController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function create()
+	public function create(Contact $contact)
 	{
-		//
+		if(Auth::check()){
+			return view('emails.create', compact('contact'));
+		}
+		else
+		{
+			return view('Auth/login');
+		}
 	}
 
 	/**
@@ -34,9 +44,12 @@ class EmailsController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function store()
+	public function store(Contact $contact)
 	{
-		//
+		$input = Input::all();
+		$input['contact_id'] = $contact->id;
+		Email::create($input);
+		return Redirect::route('contacts.edit', $contact->id)->with('Email created.');
 	}
 
 	/**
@@ -78,9 +91,12 @@ class EmailsController extends Controller {
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function destroy($id)
+	public function destroy(Contact $contact, Email $email)
 	{
-		//
+		$contact_id = $contact->id;
+		$email->delete();
+
+		return Redirect::route('contacts.edit',  array($contact_id))->with('message', 'Email deleted.');
 	}
 
 }

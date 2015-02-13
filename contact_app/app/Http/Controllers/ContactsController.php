@@ -5,6 +5,8 @@ use Input;
 use Redirect;
 use Validator;
 use App\Contact;
+use App\Phone;
+use App\Email;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 use DateTime;
@@ -74,8 +76,8 @@ class ContactsController extends Controller {
 		}
 		else {
 			$input = Input::all();
-			Contact::create( $input );
-			return Redirect::route('contacts.index')->with('message', 'Contact created');
+			$contact = Contact::create( $input );
+			return Redirect::route('contacts.edit', $contact->id)->with('message', 'Contact created');
 		}
 		
 	}
@@ -107,7 +109,12 @@ class ContactsController extends Controller {
 	public function edit(Contact $contact)
 	{
 		if(Auth::check()){
-			return view('contacts.edit', compact('contact'));
+			
+			$phones = Phone::where('contact_id','=',$contact->id)->get();
+			
+			$emails = Email::where('contact_id','=',$contact->id)->get();
+			
+			return view('contacts.edit', compact('contact', 'phones', 'emails'));
 		}
 		else
 		{
@@ -136,7 +143,7 @@ class ContactsController extends Controller {
 		if ($validator->fails()) {
 			$messages = $validator->messages();
 			
-			return Redirect::route('contacts.create')->withInput()->withErrors( $messages );
+			return Redirect::route('contacts.edit')->withInput()->withErrors( $messages );
 		}
 		else {
 			$input = array_except(Input::all(), '_method');
@@ -188,6 +195,10 @@ class ContactsController extends Controller {
 	{
 		$error_message = "";
 		$dateformat = "";
+		$start_datetime = new DateTime();
+		
+		$starttime = microtime(true);
+		
 		if (Input::hasFile('file_data')) {
 			
 			Input::file('file_data')->move('public/uploads', Input::file('file_data')->getClientOriginalName());
@@ -206,11 +217,6 @@ class ContactsController extends Controller {
 			$url = 'public/uploads/' . Input::file('file_data')->getClientOriginalName();
 			
 			$xx = Excel::load($url, function($reader) {
-				
-				/*
-				
-				
-				*/
 				
 			})->get();
 			
@@ -267,11 +273,36 @@ class ContactsController extends Controller {
 					
 					if ($count_error > 0){
 						$error_message = "Errors in upload process: " . $count_error . " - Description: " .  $error_message . ". Please check and try again.";
-						return view('contacts.loadsheetresult', compact('error_message'));
+						
+						//print log
+						$url_log = 'public/contact_errors.log';
+						if (File::exists($url_log)){
+							$log_file = File::get($url_log);
+							
+							$log_file = $log_file . "\n" . Auth::id() . "\t" . $start_datetime->format('Y\-m\-d\ h:i:s') . "\t" . $error_message;
+						
+						$bytes_written = File::put($url_log, $log_file);
+						}
+						else{
+							$log_file = "user_id\tdate\terror_description\n";
+							$log_file = $log_file . Auth::id() . "\t" . $start_datetime->format('Y\-m\-d\ h:i:s') . "\t" . $error_message;
+							$bytes_written = File::put($url_log, $log_file);
+						}
+						
+						//Time calc
+						$diff = microtime(true) - $starttime;
+						$sec = intval($diff);
+						$micro = $diff - $sec;
+						$final = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+						
+						$date_out = $start_datetime->format('Y\-m\-d\ h:i:s');
+						$user_out = Auth::user()->name;
+						$message = "Upload with errors. Data not saved.";
+						
+						return view('contacts.loadsheetresult', compact('error_message', 'final', 'count_error', 'date_out', 'user_out', 'message'));
+						
 					}
 					else{
-						
-						
 						
 							foreach ($rows as $key=>$row ) {
 								$newContact = Contact::create([
@@ -282,18 +313,62 @@ class ContactsController extends Controller {
 									'user_id'=>Auth::id()
 								]);
 								
+                                $arrayPhones = explode(" ", $row->phones);
 								
+								foreach ($arrayPhones as $value) {
+									$newPhone = Phone::create([
+										'phone'=> $value,
+										'contact_id'=> $newContact->id
+									]);
+								}
+								
+								if($row->emails != ""){
+									$arrayEmails = explode(" ", $row->emails);
+									foreach ($arrayEmails as $key_1=>$value) {
+										if($key_1 == 0){
+											$primary_value = 1;
+										}
+										else {
+											$primary_value = 0;
+										}
+										$newEmail = Email::create([
+											'email'=> $value,
+											'primary'=> $primary_value,
+											'contact_id'=> $newContact->id
+										]);
+									}
+								}
 							}
-								
-							return Redirect::route('contacts.index')->with('message', 'Contacts uploaded succesfully.');
+							
+							$diff = microtime(true) - $starttime;
+							$sec = intval($diff);
+							$micro = $diff - $sec;
+							$final = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+						
+							$date_out = $start_datetime->format('Y\-m\-d\ h:i:s');
+							$user_out = Auth::user()->name;
+							$message = "Contacts uploaded succesfully.";
+							
+							return view('contacts.loadsheetresult', compact('error_message', 'final', 'count_error', 'date_out', 'user_out', 'message'));
 						
 					}
 					
 			}
 			else
 			{
+				$diff = microtime(true) - $starttime;
+				$sec = intval($diff);
+				$micro = $diff - $sec;
+				$final = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+				$date_out = $start_datetime->format('Y\-m\-d\ h:i:s');
+				$user_out = Auth::user()->name;
+				$message = "Headers missing or with errors. Data not saved.";
+				$count_error = 1;
+				
 				$error_message = "The file have some headers errors. Remember that the headers must be: first_name, last_name, gender, birthday, phones and emails";
-				return view('contacts.loadsheetresult', compact('error_message'));
+				
+				return view('contacts.loadsheetresult', compact('error_message', 'final', 'count_error', 'date_out', 'user_out', 'message'));
+				
 			}
 			
 			
@@ -302,8 +377,18 @@ class ContactsController extends Controller {
 		}
 		else
 		{
+			$diff = microtime(true) - $starttime;
+			$sec = intval($diff);
+			$micro = $diff - $sec;
+			$final = strftime('%T', mktime(0, 0, $sec)) . str_replace('0.', '.', sprintf('%.3f', $micro));
+			$date_out = $start_datetime->format('Y\-m\-d\ h:i:s');
+			$user_out = Auth::user()->name;
+			$message = "No file selected to upload";
+			$count_error = 1;
+				
 			$error_message = "No file selected to upload";
-			return view('contacts.loadsheetresult', compact('error_message'));
+			return view('contacts.loadsheetresult', compact('error_message', 'final', 'count_error', 'date_out', 'user_out', 'message'));
+				
 			
 		}
 		

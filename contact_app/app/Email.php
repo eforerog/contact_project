@@ -11,6 +11,8 @@ class Email extends Model {
 	 */
 	protected $table = 'emails';
 	
+	protected $fillable = array('email', 'primary', 'contact_id');
+	
 	public function contact()
 	{
 		return $this->belongsTo('App\Contact');

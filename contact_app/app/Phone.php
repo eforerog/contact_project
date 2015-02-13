@@ -10,7 +10,11 @@ class Phone extends Model {
 	 * @var string
 	 */
 	protected $table = 'phones';
-	//
+	
+	protected $guarded = [];
+	
+	
+	protected $fillable = array('phone', 'contact_id');
 	
 	public function contact()
 	{

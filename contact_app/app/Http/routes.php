@@ -26,11 +26,11 @@ Route::controllers([
 ]);
 
 Route::bind('emails', function($value, $route) {
-	return App\Email::whereEmail($value)->first();
+	return App\Email::whereId($value)->first();
 });
 
 Route::bind('phones', function($value, $route) {
-	return App\Phone::wherePhone($value)->first();
+	return App\Phone::whereId($value)->first();
 });
 
 Route::bind('contacts', function($value, $route) {

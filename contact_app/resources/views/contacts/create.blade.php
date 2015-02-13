@@ -9,10 +9,10 @@
                 
                 	<div class="panel-body">
  
-                    	{!! Form::model(new App\Contact, ['route' => ['contacts.store']]) !!}
+                    	{!! Form::model(new App\Contact, ['route' => ['contacts.store'], 'class' => 'form-horizontal']) !!}
                             @include('contacts/partials/_form', ['submit_text' => 'Create Contact'])
                         {!! Form::close() !!}
-
+						
 				</div>
 			</div>
 		</div>

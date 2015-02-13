@@ -1,7 +1,11 @@
 <?php namespace App\Http\Controllers;
 
+use Auth;
+use Validator;
 use App\Contact;
 use App\Phone;
+use Redirect;
+use Input;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
 
@@ -24,9 +28,15 @@ class PhonesController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function create()
+	public function create(Contact $contact)
 	{
-		//
+		if(Auth::check()){
+			return view('phones.create', compact('contact'));
+		}
+		else
+		{
+			return view('Auth/login');
+		}
 	}
 
 	/**
@@ -34,9 +44,12 @@ class PhonesController extends Controller {
 	 *
 	 * @return Response
 	 */
-	public function store()
+	public function store(Contact $contact)
 	{
-		//
+		$input = Input::all();
+		$input['contact_id'] = $contact->id;
+		Phone::create($input);
+		return Redirect::route('contacts.edit', $contact->id)->with('Phone number created.');
 	}
 
 	/**
@@ -56,9 +69,9 @@ class PhonesController extends Controller {
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function edit($id)
+	public function edit(Contact $contact, Phone $phone)
 	{
-		//
+		return view('phones.edit', compact('contact', 'phone'));
 	}
 
 	/**
@@ -67,9 +80,24 @@ class PhonesController extends Controller {
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function update($id)
+	public function update(Contact $contact, Phone $phone)
 	{
-		//
+		$rules = array(
+			'phone'=> 'required',
+		);
+		
+		$validator = Validator::make(Input::all(), $rules);
+		
+		if ($validator->fails()) {
+			$messages = $validator->messages();
+			
+			return Redirect::route('contacts.phones.edit')->withInput()->withErrors( $messages );
+		}
+		else {
+			$input = array_except(Input::all(), '_method');
+			$phone->update($input);
+			return Redirect::route('contacts.edit', $contact->id)->with('message', 'Phone updated.');
+		}
 	}
 
 	/**
@@ -78,9 +106,12 @@ class PhonesController extends Controller {
 	 * @param  int  $id
 	 * @return Response
 	 */
-	public function destroy($id)
+	public function destroy(Contact $contact, Phone $phone)
 	{
-		//
+		$contact_id = $contact->id;
+		$phone->delete();
+
+		return Redirect::route('contacts.edit',  array($contact_id))->with('message', 'Phone deleted.');
 	}
 
 }
