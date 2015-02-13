@@ -11,8 +11,10 @@ The layout of this project is:
 M - Located at (contact_app/app/)
     The model files are: Contact.php, Email.php, Phone.php, User.php
     This files are based in Eloquent ORM (from Laravel). You can see documentation at http://laravel.com/docs/5.0/eloquent
+    
 V - Located at (contact_app/resources/views)
     The views used have and master page or layout named app.blade.php and for each section exist a view named similar to the model name. This views use a template language provided by Laravel. You can see documentation at http://laravel.com/docs/5.0/views
+    
 C - Located at (contact_app/app/Http/Controllers/)
     The controllers use the Laravel core for proccess all the actions of the systems. You can see documentation at http://laravel.com/docs/5.0/controllers 
     
